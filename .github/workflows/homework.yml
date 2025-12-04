@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# Kell a GitHub Container Registry-hez (ghcr.io)
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,7 +31,6 @@ jobs:
         run: ./mvnw clean package
 
 
-
   docker_build_and_publish:
     needs: build
     runs-on: ubuntu-latest
@@ -35,13 +39,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker login
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u papaslev --password-stdin
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build and publish Docker image
+      - name: Build and publish Docker image
         run: |
-          docker build -t ghcr.io/papaslev/cubix/1/homework/app:springboot .
-          docker push ghcr.io/papaslev/cubix/1/homework/app:springboot
+          IMAGE_NAME=ghcr.io/${{ github.actor }}/cubix/1/homework/app:springboot
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
 
   verify_image:
     needs: docker_build_and_publish
@@ -51,8 +57,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Make script executable
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Make verify script executable
         run: chmod +x verify-image.sh
 
-      - name: Verify the image
+      - name: Run verify script
         run: ./verify-image.sh
