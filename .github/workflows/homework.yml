@@ -38,11 +38,10 @@ jobs:
       - name: Docker login
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u papaslev --password-stdin
 
-      - name: Build and publish Docker image
+    - name: Build and publish Docker image
         run: |
-          docker build -t ghcr.io/papaslev/cubix-first-homework:latest .
-          docker push ghcr.io/papaslev/cubix-first-homework:latest
-
+          docker build -t ghcr.io/papaslev/cubix/1/homework/app:springboot .
+          docker push ghcr.io/papaslev/cubix/1/homework/app:springboot
 
   verify_image:
     needs: docker_build_and_publish
