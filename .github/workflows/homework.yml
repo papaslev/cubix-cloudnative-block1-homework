@@ -22,12 +22,18 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+          cache: maven
 
       - name: Make mvnw executable
         run: chmod +x mvnw
 
       - name: Build with Maven wrapper
         run: ./mvnw clean package
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+        name: app-jar
+        path: target/*.jar
 
 
   docker_build_and_publish:
@@ -37,19 +43,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Download JAR artifact
+        uses: actions/download-artifact@v4
+        with:
+        name: app-jar
+        path: target
+
 
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+          cache: maven
 
       - name: Make mvnw executable
         run: chmod +x mvnw
 
-      - name: Build jar with Maven
-        run: ./mvnw clean package
-
+     
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
